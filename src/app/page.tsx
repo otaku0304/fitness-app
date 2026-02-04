@@ -122,34 +122,65 @@ const INITIAL_STATS: UserStats = {
 
 // "Simulation" Data to populate when Mode is selected
 const GENERATE_STATS = (mode: ModeType): UserStats => {
+  // Start with just "Today" as an empty entry
+  const today = new Date();
+  const dateStr = today.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+  const initialActivity = [
+    { name: dateStr, calories: 0, steps: 0 }
+  ];
+
   if (mode === 'Weight Loss') return {
-    calories: 1800,
-    steps: 10000,
-    distance: 7.5,
-    water: 2.5,
-    macros: [{ name: 'Protein', value: 180, color: '#10b981' }, { name: 'Carbs', value: 120, color: '#34d399' }, { name: 'Fats', value: 60, color: '#6ee7b7' }],
-    goals: [{ label: 'Cardio', current: 40, max: 60, unit: 'min', color: 'bg-emerald-500', shadow: 'shadow-emerald-500/50' }],
-    activity: [{ name: 'Mon', calories: 1500, steps: 8000 }, { name: 'Tue', calories: 1800, steps: 10500 }, { name: 'Wed', calories: 1600, steps: 9000 }, { name: 'Thu', calories: 2000, steps: 12000 }, { name: 'Fri', calories: 1900, steps: 11000 }, { name: 'Sat', calories: 2200, steps: 14000 }, { name: 'Sun', calories: 1800, steps: 10000 }]
+    calories: 0,
+    steps: 0,
+    distance: 0,
+    water: 0,
+    macros: [
+      { name: 'Protein', value: 0, color: '#10b981' },
+      { name: 'Carbs', value: 0, color: '#34d399' },
+      { name: 'Fats', value: 0, color: '#6ee7b7' }
+    ],
+    goals: [
+      { label: 'Cardio Goal', current: 0, max: 60, unit: 'min', color: 'bg-emerald-500', shadow: 'shadow-emerald-500/50' },
+      { label: 'Calorie Limit', current: 0, max: 1800, unit: 'kcal', color: 'bg-emerald-500', shadow: 'shadow-emerald-500/50' }
+    ],
+    activity: initialActivity
   };
+
   if (mode === 'Weight Gain') return {
-    calories: 3200,
-    steps: 6000,
-    distance: 4.0,
-    water: 3.0,
-    macros: [{ name: 'Protein', value: 200, color: '#3b82f6' }, { name: 'Carbs', value: 400, color: '#60a5fa' }, { name: 'Fats', value: 90, color: '#93c5fd' }],
-    goals: [{ label: 'Calories', current: 2800, max: 3200, color: 'bg-blue-500', shadow: 'shadow-blue-500/50' }],
-    activity: [{ name: 'Mon', calories: 2800, steps: 5000 }, { name: 'Tue', calories: 3000, steps: 6000 }, { name: 'Wed', calories: 2900, steps: 5500 }, { name: 'Thu', calories: 3100, steps: 7000 }, { name: 'Fri', calories: 3200, steps: 6500 }, { name: 'Sat', calories: 3500, steps: 8000 }, { name: 'Sun', calories: 3000, steps: 5000 }]
+    calories: 0,
+    steps: 0,
+    distance: 0,
+    water: 0,
+    macros: [
+      { name: 'Protein', value: 0, color: '#3b82f6' },
+      { name: 'Carbs', value: 0, color: '#60a5fa' },
+      { name: 'Fats', value: 0, color: '#93c5fd' }
+    ],
+    goals: [
+      { label: 'Calorie Goal', current: 0, max: 3200, unit: 'kcal', color: 'bg-blue-500', shadow: 'shadow-blue-500/50' },
+      { label: 'Protein Target', current: 0, max: 200, unit: 'g', color: 'bg-blue-400', shadow: 'shadow-blue-400/50' }
+    ],
+    activity: initialActivity
   };
-  if (mode === 'Muscle Gain') return {
-    calories: 2500,
-    steps: 8000,
-    distance: 5.0,
-    water: 3.5,
-    macros: [{ name: 'Protein', value: 220, color: '#f97316' }, { name: 'Carbs', value: 250, color: '#fb923c' }, { name: 'Fats', value: 70, color: '#fdba74' }],
-    goals: [{ label: 'Protein', current: 180, max: 220, unit: 'g', color: 'bg-orange-500', shadow: 'shadow-orange-500/50' }],
-    activity: [{ name: 'Mon', calories: 2200, steps: 7000 }, { name: 'Tue', calories: 2400, steps: 8500 }, { name: 'Wed', calories: 2300, steps: 7500 }, { name: 'Thu', calories: 2600, steps: 9500 }, { name: 'Fri', calories: 2500, steps: 9000 }, { name: 'Sat', calories: 2800, steps: 11000 }, { name: 'Sun', calories: 2400, steps: 8000 }]
+
+  // Muscle Gain / Maintenance (Default)
+  return {
+    calories: 0,
+    steps: 0,
+    distance: 0,
+    water: 0,
+    macros: [
+      { name: 'Protein', value: 0, color: '#f97316' },
+      { name: 'Carbs', value: 0, color: '#fb923c' },
+      { name: 'Fats', value: 0, color: '#fdba74' }
+    ],
+    goals: [
+      { label: 'Protein Goal', current: 0, max: 220, unit: 'g', color: 'bg-orange-500', shadow: 'shadow-orange-500/50' },
+      { label: 'Workout Time', current: 0, max: 90, unit: 'min', color: 'bg-orange-500', shadow: 'shadow-orange-500/50' }
+    ],
+    activity: initialActivity
   };
-  return INITIAL_STATS;
 };
 
 export default function Home() {
@@ -240,8 +271,8 @@ export default function Home() {
     } else {
       // First selection
       setUserProfile(prev => ({
-        name: 'mr_ask_chay',
-        email: 'user@fitness.app',
+        name: 'Guest',
+        email: 'guest@fitness.app',
         avatar: '',
         mode,
         modeSince: Date.now(),
@@ -257,6 +288,32 @@ export default function Home() {
 
   const handleAddItem = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // 1. Calculate stats based on inputs
+    const durationMinutes = parseInt(newItem.duration) || 30; // Default to 30 if parsing fails
+    let caloriesBurned = 0;
+    let stepsTaken = 0;
+
+    switch (newItem.type) {
+      case 'Fitness':
+        caloriesBurned = durationMinutes * 10; // High intensity: ~10 cal/min
+        stepsTaken = durationMinutes * 130;    // Running: ~130 steps/min
+        break;
+      case 'Wellness': // Yoga, etc
+        caloriesBurned = durationMinutes * 3.5; // Low intensity
+        stepsTaken = durationMinutes * 10;      // Minimal steps
+        break;
+      case 'Nutrition':
+        caloriesBurned = 0; // Eating doesn't burn active calories usually
+        stepsTaken = 0;
+        break;
+      default: // Other/Walking
+        caloriesBurned = durationMinutes * 5;
+        stepsTaken = durationMinutes * 100;
+        break;
+    }
+
+    // 2. Add to Schedule
     const colors = {
       'Fitness': currentTheme.secondary,
       'Wellness': 'bg-purple-100 text-purple-700',
@@ -273,6 +330,54 @@ export default function Home() {
     };
     setSchedule([...schedule, item]);
     setIsAddModalOpen(false);
+
+    // 3. Update User Stats (Totals + History)
+    setUserStats(prev => {
+      const todayDate = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+      // Handle History Logic (Max 10 Days)
+      let newActivity = [...prev.activity];
+      const existingDayIndex = newActivity.findIndex(a => a.name === todayDate);
+
+      if (existingDayIndex >= 0) {
+        // Update today
+        newActivity[existingDayIndex] = {
+          ...newActivity[existingDayIndex],
+          calories: newActivity[existingDayIndex].calories + caloriesBurned,
+          steps: newActivity[existingDayIndex].steps + stepsTaken
+        };
+      } else {
+        // Add new day
+        newActivity.push({
+          name: todayDate,
+          calories: caloriesBurned,
+          steps: stepsTaken
+        });
+      }
+
+      // Keep only last 10 days
+      if (newActivity.length > 10) {
+        newActivity = newActivity.slice(newActivity.length - 10);
+      }
+
+      return {
+        ...prev,
+        calories: prev.calories + caloriesBurned,
+        steps: prev.steps + stepsTaken,
+        distance: prev.distance + (stepsTaken * 0.0008), // approx 0.8m per step -> km
+        activity: newActivity
+      };
+    });
+
+    // Notify user of gain
+    if (caloriesBurned > 0) {
+      setNotifications(prev => [...prev, {
+        id: Date.now().toString(),
+        text: `Activity added! Burned ${caloriesBurned} kcal.`,
+        time: 'Just now',
+        unread: true
+      }]);
+    }
   };
 
   if (!isMounted) return null;

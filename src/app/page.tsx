@@ -293,21 +293,25 @@ export default function Home() {
     const durationMinutes = parseInt(newItem.duration) || 30; // Default to 30 if parsing fails
     let caloriesBurned = 0;
     let stepsTaken = 0;
+    let waterAdded = 0;
 
     switch (newItem.type) {
       case 'Fitness':
-        caloriesBurned = durationMinutes * 10; // High intensity: ~10 cal/min
-        stepsTaken = durationMinutes * 130;    // Running: ~130 steps/min
+        caloriesBurned = durationMinutes * 10;
+        stepsTaken = durationMinutes * 130;
         break;
-      case 'Wellness': // Yoga, etc
-        caloriesBurned = durationMinutes * 3.5; // Low intensity
-        stepsTaken = durationMinutes * 10;      // Minimal steps
+      case 'Wellness':
+        caloriesBurned = durationMinutes * 3.5;
+        stepsTaken = durationMinutes * 10;
         break;
       case 'Nutrition':
-        caloriesBurned = 0; // Eating doesn't burn active calories usually
+        caloriesBurned = 0;
         stepsTaken = 0;
         break;
-      default: // Other/Walking
+      case 'Hydration':
+        waterAdded = parseFloat(newItem.duration) || 0.25; // Reuse duration field for Liters
+        break;
+      default:
         caloriesBurned = durationMinutes * 5;
         stepsTaken = durationMinutes * 100;
         break;
@@ -318,13 +322,14 @@ export default function Home() {
       'Fitness': currentTheme.secondary,
       'Wellness': 'bg-purple-100 text-purple-700',
       'Nutrition': 'bg-green-100 text-green-700',
+      'Hydration': 'bg-cyan-100 text-cyan-700',
       'Other': 'bg-slate-100 text-slate-700'
     };
     const item: ScheduleItem = {
       id: Date.now().toString(),
       title: newItem.title,
       time: newItem.time,
-      duration: newItem.duration || '30 min',
+      duration: newItem.type === 'Hydration' ? `${waterAdded} L` : (newItem.duration || '30 min'),
       type: newItem.type,
       color: colors[newItem.type as keyof typeof colors] || colors['Other']
     };
@@ -335,19 +340,17 @@ export default function Home() {
     setUserStats(prev => {
       const todayDate = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
-      // Handle History Logic (Max 10 Days)
+      // Handle History Logic
       let newActivity = [...prev.activity];
       const existingDayIndex = newActivity.findIndex(a => a.name === todayDate);
 
       if (existingDayIndex >= 0) {
-        // Update today
         newActivity[existingDayIndex] = {
           ...newActivity[existingDayIndex],
           calories: newActivity[existingDayIndex].calories + caloriesBurned,
           steps: newActivity[existingDayIndex].steps + stepsTaken
         };
       } else {
-        // Add new day
         newActivity.push({
           name: todayDate,
           calories: caloriesBurned,
@@ -355,7 +358,6 @@ export default function Home() {
         });
       }
 
-      // Keep only last 10 days
       if (newActivity.length > 10) {
         newActivity = newActivity.slice(newActivity.length - 10);
       }
@@ -364,13 +366,21 @@ export default function Home() {
         ...prev,
         calories: prev.calories + caloriesBurned,
         steps: prev.steps + stepsTaken,
-        distance: prev.distance + (stepsTaken * 0.0008), // approx 0.8m per step -> km
+        distance: prev.distance + (stepsTaken * 0.0008),
+        water: parseFloat((prev.water + waterAdded).toFixed(2)), // Ensure clean float
         activity: newActivity
       };
     });
 
-    // Notify user of gain
-    if (caloriesBurned > 0) {
+    // Notify user
+    if (newItem.type === 'Hydration') {
+      setNotifications(prev => [...prev, {
+        id: Date.now().toString(),
+        text: `Hydrated! Added ${waterAdded}L water.`,
+        time: 'Just now',
+        unread: true
+      }]);
+    } else if (caloriesBurned > 0) {
       setNotifications(prev => [...prev, {
         id: Date.now().toString(),
         text: `Activity added! Burned ${caloriesBurned} kcal.`,
@@ -661,29 +671,42 @@ export default function Home() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Duration</label>
-                  <select
-                    className="w-full p-3 rounded-xl border border-slate-200 focus:border-blue-500 outline-none bg-white"
-                    value={newItem.duration}
-                    onChange={(e) => setNewItem({ ...newItem, duration: e.target.value })}
-                  >
-                    <option value="15 min">15 min</option>
-                    <option value="30 min">30 min</option>
-                    <option value="45 min">45 min</option>
-                    <option value="1 hr">1 hr</option>
-                  </select>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    {newItem.type === 'Hydration' ? 'Amount (L)' : 'Duration'}
+                  </label>
+                  {newItem.type === 'Hydration' ? (
+                    <input
+                      type="number"
+                      step="0.05"
+                      placeholder="0.25"
+                      className="w-full p-3 rounded-xl border border-slate-200 focus:border-blue-500 outline-none"
+                      value={newItem.duration}
+                      onChange={(e) => setNewItem({ ...newItem, duration: e.target.value })}
+                    />
+                  ) : (
+                    <select
+                      className="w-full p-3 rounded-xl border border-slate-200 focus:border-blue-500 outline-none bg-white"
+                      value={newItem.duration}
+                      onChange={(e) => setNewItem({ ...newItem, duration: e.target.value })}
+                    >
+                      <option value="15 min">15 min</option>
+                      <option value="30 min">30 min</option>
+                      <option value="45 min">45 min</option>
+                      <option value="1 hr">1 hr</option>
+                    </select>
+                  )}
                 </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Type</label>
                 <div className="flex gap-2">
-                  {['Fitness', 'Wellness', 'Nutrition'].map(type => (
+                  {['Fitness', 'Wellness', 'Nutrition', 'Hydration'].map(type => (
                     <button
                       key={type}
                       type="button"
                       onClick={() => setNewItem({ ...newItem, type })}
-                      className={`flex-1 py-2 rounded-lg text-sm font-bold border transition-all ${newItem.type === type ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}
+                      className={`flex-1 py-2 rounded-lg text-xs font-bold border transition-all ${newItem.type === type ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}
                     >
                       {type}
                     </button>
